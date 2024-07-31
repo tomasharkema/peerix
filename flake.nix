@@ -10,27 +10,35 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }: {
-    nixosModules.peerix = import ./module.nix;
-    overlay = import ./overlay.nix { inherit self; };
-  } // flake-utils.lib.eachDefaultSystem (system:
-    let
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+    ...
+  }:
+    {
+      nixosModules.peerix = import ./module.nix;
+      overlay = import ./overlay.nix {inherit self;};
+    }
+    // flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
-      python = pkgs.python39;
+      python = pkgs.python3;
       packages = map (pkg: python.pkgs.${pkg}) (builtins.filter (v: builtins.isString v && (builtins.stringLength v) > 0) (builtins.split "\n" (builtins.readFile ./requirements.txt)));
     in {
       packages = rec {
         peerix-unwrapped = python.pkgs.buildPythonApplication {
           pname = "peerix";
-          version = builtins.replaceStrings [ " " "\n" ] [ "" "" ] (builtins.readFile ./VERSION);
+          version = builtins.replaceStrings [" " "\n"] ["" ""] (builtins.readFile ./VERSION);
           src = ./.;
 
           doCheck = false;
-    
-          propagatedBuildInputs = with pkgs; [
-            nix
-            nix-serve
-          ] ++ packages;
+
+          propagatedBuildInputs = with pkgs;
+            [
+              nix
+              nix-serve
+            ]
+            ++ packages;
         };
 
         peerix = pkgs.writeShellScriptBin "peerix" ''
@@ -49,6 +57,9 @@
         ];
       };
 
-      defaultApp = { type = "app"; program = "${self.packages.${system}.peerix}/bin/peerix"; };
+      defaultApp = {
+        type = "app";
+        program = "${self.packages.${system}.peerix}/bin/peerix";
+      };
     });
 }
