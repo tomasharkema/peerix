@@ -1,8 +1,11 @@
-{ lib, config, pkgs, ... }:
-let
-  cfg = config.services.peerix;
-in
 {
+  lib,
+  config,
+  pkgs,
+  ...
+}: let
+  cfg = config.services.peerix;
+in {
   options = with lib; {
     services.peerix = {
       enable = lib.mkEnableOption "peerix";
@@ -40,7 +43,7 @@ in
       };
 
       user = lib.mkOption {
-        type = with types; oneOf [ str int ];
+        type = with types; oneOf [str int];
         default = "nobody";
         description = ''
           The user the service will use.
@@ -48,7 +51,7 @@ in
       };
 
       group = lib.mkOption {
-        type = with types; oneOf [ str int ];
+        type = with types; oneOf [str int];
         default = "nobody";
         description = ''
           The user the service will use.
@@ -71,7 +74,7 @@ in
 
       package = mkOption {
         type = types.package;
-        default = (import ./default.nix).default or pkgs.peerix;
+        default = pkgs.peerix;
         defaultText = literalExpression "pkgs.peerix";
         description = "The package to use for peerix";
       };
@@ -120,10 +123,10 @@ in
 
         NoNewPrivileges = true;
         ReadOnlyPaths = lib.mkMerge [
-          ([
+          [
             "/nix/var"
             "/nix/store"
-          ])
+          ]
 
           (lib.mkIf (cfg.privateKeyFile != null) [
             cfg.privateKeyFile
@@ -158,8 +161,8 @@ in
     };
 
     networking.firewall = lib.mkIf (cfg.openFirewall) {
-      allowedTCPPorts = [ 12304 ];
-      allowedUDPPorts = [ 12304 ];
+      allowedTCPPorts = [12304];
+      allowedUDPPorts = [12304];
     };
   };
 }
